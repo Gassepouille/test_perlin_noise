@@ -30,9 +30,7 @@ TEST.Sphere = class Sphere{
 		uniform float time;
 		
 		float turbulence( vec3 p ) {
-						
-			return abs( pnoise( vec3( 2.0 * p ), vec3( 10.0, 10.0, 10.0 ) ) / 2.0 );
-			
+			return abs( pnoise( vec3( 2.0 * p ), vec3( 10.0, 10.0, 10.0 ) ) / 2.0 );			
 		}
 		
 		void main() {
@@ -40,9 +38,11 @@ TEST.Sphere = class Sphere{
 			vUv = uv;
 			
 			// add time to the noise parameters so it's animated
-			noise = -0.50 * turbulence( 6.5 * normal + time );
-			float b = 0.01 * pnoise( 0.0005 * position + vec3( 2.0 * time ), vec3( 100.0 ) );
-			float displacement = - noise + b;
+			// 1st value = amplitude of the noise ; 2nd value density of the zone with turbulences
+			noise = 0.5 * turbulence( .4 * normal + time );
+			// pulse amplitude; separation; pulse frequency
+			float b = 1.0 * pnoise( 0.1 * position + vec3( 0.3 * time ), vec3( 1.0 ) );
+			float displacement = noise + b;
 			
 			vec3 newPosition = position + normal * displacement;
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
