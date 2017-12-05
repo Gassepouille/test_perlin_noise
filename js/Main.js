@@ -12,6 +12,8 @@ APP.Main = class Main {
 		this._container.appendChild( this._renderer.domElement );
 		// Camera + scene
 		this._camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 1000);
+		this._camera.position.set(5,2,5);
+		this._camera.lookAt(new THREE.Vector3(0,0,0));
 	        this.scene = new THREE.Scene();
 
 		// Engine
@@ -49,7 +51,12 @@ APP.Main = class Main {
 	}
 	_addObject(){
 		
+		let directionalLight	= new THREE.DirectionalLight('white', 1);
+		directionalLight.position.set(0.5, 4, 2);
+		this.scene.add( directionalLight );
+		
 		let sphere = new TEST.Sphere();
+		sphere.addLight(directionalLight);
 		this.scene.add( sphere.object3d );
 		// Move camera around center
 		this._engine.onUpdateFcts.push((delta,now)=>{
@@ -58,16 +65,16 @@ APP.Main = class Main {
 	}
 	_addLights(){
 		// add ambient light
-		let ambientLight = new THREE.AmbientLight( 0x020202 );
-		this.scene.add( ambientLight );
+		// let ambientLight = new THREE.AmbientLight( 0x020202 );
+		// this.scene.add( ambientLight );
 		// add a light in front
-		let directionalLight	= new THREE.DirectionalLight('white', 1);
-		directionalLight.position.set(0.5, 0.5, 2);
-		this.scene.add( directionalLight );
+		// let directionalLight	= new THREE.DirectionalLight('white', 1);
+		// directionalLight.position.set(0.5, 0.5, 2);
+		// this.scene.add( directionalLight );
 		// add a light behind
-		let secondDirectionalLight	= new THREE.DirectionalLight('white', 0.75);
-		secondDirectionalLight.position.set(-0.5, -0.5, -2);
-		this.scene.add( secondDirectionalLight );
+		// let secondDirectionalLight	= new THREE.DirectionalLight('white', 0.75);
+		// secondDirectionalLight.position.set(-0.5, -0.5, -2);
+		// this.scene.add( secondDirectionalLight );
 	}
 	onWindowResize(){
 		let width  =  window.innerWidth;

@@ -9,8 +9,10 @@ TEST.Sphere = class Sphere{
 	}
 	_createSphere(radius){
 		let geometry = new THREE.SphereGeometry(radius, 64, 64);
+		let color = 0xff0000;
 		this._uniforms = {
 			time : {type: 'f', value: 0 },
+			color: { type: "c", value: new THREE.Color( color ) }
 		};
 		let material = new THREE.ShaderMaterial({
 			uniforms	: this._uniforms,
@@ -19,6 +21,10 @@ TEST.Sphere = class Sphere{
 		});
 		return new THREE.Mesh( geometry, material );
 	}
+	addLight(light){
+		this._uniforms.lightPosition = { type: "v3", value: light.position };
+		this._uniforms.lightColor = { type: "c", value: light.color };
+	}
 	update(delta,now){
 		this._uniforms.time.value = now;
 	}
@@ -26,6 +32,10 @@ TEST.Sphere = class Sphere{
 		return this._getAshimaNoise()+`
 		
 		varying vec2 vUv;
+		varying vec3 vNormal;
+		varying vec3 vPosition;
+		varying mat4 vModelViewMatrix;
+		varying mat3 vNormalMatrix;
 		varying float noise;
 		uniform float time;
 		
@@ -35,16 +45,21 @@ TEST.Sphere = class Sphere{
 		
 		void main() {
 			
-			vUv = uv;
+			// vUv = uv;
 			
 			// add time to the noise parameters so it's animated
 			// 1st value = amplitude of the noise ; 2nd value density of the zone with turbulences
-			noise = 0.5 * turbulence( .4 * normal + time );
+			noise = 0.8 * turbulence( .3 * normal + time );
 			// pulse amplitude; separation; pulse frequency
-			float b = 1.0 * pnoise( 0.1 * position + vec3( 0.3 * time ), vec3( 1.0 ) );
-			float displacement = noise + b;
+			// float pulse = 1.0 * pnoise( 0.1 * position + vec3( 0.3 * time ), vec3( 1.0 ) );
+			// float displacement = noise + pulse;
+			float displacement = noise ;
 			
 			vec3 newPosition = position + normal * displacement;
+			vNormal = normal;
+			vModelViewMatrix = modelViewMatrix;
+			vNormalMatrix = normalMatrix;
+			vPosition = newPosition;
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
 			
 		}
@@ -53,11 +68,54 @@ TEST.Sphere = class Sphere{
 	_getFragmentShader(){
 		return `
 		varying vec2 vUv;
+		varying vec3 vNormal;
+		varying vec3 vPosition;
+		varying mat4 vModelViewMatrix;
+		varying mat3 vNormalMatrix;
 		varying float noise;
+		
+		uniform vec3 color;
+		uniform vec3 lightPosition;
+		uniform vec3 lightColor;
 				
 		void main() {
-			vec3 color = vec3( vUv * ( 1. - 2. * noise ), 0.0 );
-			gl_FragColor = vec4( color.rgb, 1.0 );
+			
+			
+			vec4 p = vec4( vPosition, 1. );
+			vec3 e = normalize( vec3( vModelViewMatrix * p ) );
+			
+			
+			// vec4 lDirection = uViewMatrix * vec4( lightPosition, 0.0 );
+			// vec3 lVector = normalize( lDirection.xyz );
+			// vec3 normal = normalize( vNormal );
+			// float diffuse = dot( normal, lVector );
+			// 
+			// vec3 r = reflect( lVector, normal );
+			// float m = 2. * sqrt(
+			// 	pow( r.x, 2. ) +
+			// 	pow( r.y, 2. ) +
+			// 	pow( r.z + 1., 2. )
+			// );
+			// vec2 vN = r.xy / m + .5;
+			// gl_FragColor = vec4( vN,1. , 1. );
+			
+			
+			
+			// vec3 specular = 0.1*lightColor;
+			
+			// vec3 linearColor = diffuse + specular;
+			
+			// vec3 gamma = vec3(4.0/1.0);
+   // 			gl_FragColor = vec4(pow(linearColor, gamma), 1.0);
+			
+			// gl_FragColor = vec4( 1.0 * color * lightColor * diffuse, 1.0 );
+			
+			//vec3 color = vec3( vec2(1.0,0.0) * ( 1. - 2. * noise ), 0.0 );
+			//gl_FragColor = vec4( color.rgb, 1.0 );
+			gl_FragColor = vec4( vec3( vUv, 1.0 ), 1.0 );
+			
+			// Debug
+			// gl_FragColor = vec4(normalize(vNormal),1.0);
 		}
 		`;
 	}
